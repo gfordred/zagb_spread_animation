@@ -261,7 +261,7 @@ svg { width:100%; display:block; overflow:visible; }
   </div>
   <div id="slider-wrap">
     <span class="tick-lbl">2019</span>
-    <input type="range" id="slider" min="0" max="1637" value="0" step="1">
+    <input type="range" id="slider" min="0" max="1637" value="1115" step="1">
     <span class="tick-lbl">2026</span>
   </div>
 </div>
@@ -374,32 +374,83 @@ const grad = defs.append('linearGradient').attr('id','cg').attr('x1','0').attr('
 grad.append('stop').attr('offset','0%').attr('stop-color','#4fa3e8').attr('stop-opacity',.4);
 grad.append('stop').attr('offset','100%').attr('stop-color','#4fa3e8').attr('stop-opacity',0);
 
-const allY = RAW.flatMap(d => allTenors.map(([k]) => d[k]).filter(v => v != null));
-const yMin = Math.floor(d3.min(allY) * 2) / 2 - .3;
-const yMax = Math.ceil(d3.max(allY)  * 2) / 2 + .3;
-
 const cxSc = d3.scaleLinear().domain([0, 30]).range([0, CW]);
-const cySc = d3.scaleLinear().domain([yMin, yMax]).range([CH, 0]);
+// Dynamic Y scale — updated per frame with tight auto-ranging
+const cySc = d3.scaleLinear().domain([6, 14]).range([CH, 0]);
 
-// grids & axes
-cg.append('g').attr('class','grid').call(d3.axisLeft(cySc).tickSize(-CW).tickFormat(''));
+// Persistent axis + grid groups — re-called each frame as Y domain changes
+const cyGridG = cg.append('g').attr('class','grid');
+const cyAxisG = cg.append('g').attr('class','axis');
 cg.append('g').attr('class','grid').attr('transform',`translate(0,${CH})`).call(d3.axisBottom(cxSc).ticks(12).tickSize(-CH).tickFormat(''));
 cg.append('g').attr('class','axis').attr('transform',`translate(0,${CH})`)
   .call(d3.axisBottom(cxSc).ticks(12).tickFormat(d => d === 0 ? 'Repo' : d + 'Y'));
-cg.append('g').attr('class','axis').call(d3.axisLeft(cySc).tickFormat(d => d.toFixed(1) + '%'));
 cg.append('text').attr('class','axis-lbl').attr('x',CW/2).attr('y',CH+32).attr('text-anchor','middle').text('TENOR');
 cg.append('text').attr('class','axis-lbl').attr('transform','rotate(-90)').attr('x',-CH/2).attr('y',-38).attr('text-anchor','middle').text('YIELD %');
 
-// ghost history (every 12 obs)
-const lgH = d3.line().x(d => cxSc(d[0])).y(d => cySc(d[1])).defined(d => d[1] != null).curve(d3.curveCatmullRom.alpha(.5));
-const ghostG = cg.append('g').attr('opacity', .08);
+// ── Curve shape legend (top-right corner) ──────────────────────
+const legendG = cg.append('g').attr('transform', `translate(${CW - 10}, 2)`);
+const shapeLabel = legendG.append('text')
+  .attr('text-anchor','end').attr('font-family',"'IBM Plex Mono',monospace")
+  .attr('font-size', 11).attr('font-weight', 600).attr('letter-spacing', 1.5);
+const shapeMetaG = legendG.append('g').attr('transform', 'translate(0, 16)');
+// Mini spread pills
+const pillData = [
+  { label:'30–5Y', color:'#f59e0b', id:'lpill-0' },
+  { label:'10–2Y', color:'#34d399', id:'lpill-1' },
+  { label:'30–10Y', color:'#a78bfa', id:'lpill-2' },
+];
+pillData.forEach((p, i) => {
+  const pg = shapeMetaG.append('g').attr('transform', `translate(0, ${i * 15})`);
+  pg.append('line').attr('x1',-44).attr('x2',-16).attr('y1',5).attr('y2',5)
+    .attr('stroke',p.color).attr('stroke-width',2).attr('stroke-dasharray','5,2');
+  pg.append('text').attr('x',-12).attr('text-anchor','start').attr('y',8.5)
+    .attr('font-family',"'IBM Plex Mono',monospace").attr('font-size',8.5)
+    .attr('fill',p.color).attr('id', p.id).text(p.label + ': —');
+});
+
+// ghost history (every 12 obs) — paths stored so they redraw when Y rescales
+const ghostG = cg.append('g').attr('opacity', .09);
+const ghostPts = [];
 for (let i = 0; i < N; i += 12) {
   const pts = allTenors.map(([k, yr]) => [yr, RAW[i][k]]).filter(p => p[1] != null);
-  if (pts.length > 3) ghostG.append('path').datum(pts).attr('fill','none').attr('stroke','#4fa3e8').attr('stroke-width',.8).attr('d', lgH);
+  if (pts.length > 3) {
+    ghostPts.push(pts);
+    ghostG.append('path').datum(pts).attr('fill','none').attr('stroke','#4fa3e8').attr('stroke-width',.7).attr('class','ghost-path');
+  }
 }
 
 const lineGen = d3.line().x(d => cxSc(d[0])).y(d => cySc(d[1])).defined(d => d[1] != null).curve(d3.curveCatmullRom.alpha(.5));
-const areaGen = d3.area().x(d => cxSc(d[0])).y0(CH).y1(d => cySc(d[1])).defined(d => d[1] != null).curve(d3.curveCatmullRom.alpha(.5));
+const areaGen = d3.area().x(d => cxSc(d[0])).y0(d => Math.min(CH, cySc(d[1]) + (CH - cySc(d[1])) * 0.55)).y1(d => cySc(d[1])).defined(d => d[1] != null).curve(d3.curveCatmullRom.alpha(.5));
+
+// Helper: compute tight Y domain with 0.25% snapped bounds
+function niceYDomain(vals) {
+  const lo = d3.min(vals), hi = d3.max(vals);
+  const range = hi - lo;
+  const pad = Math.max(0.2, range * 0.18);
+  return [Math.floor((lo - pad) * 4) / 4, Math.ceil((hi + pad) * 4) / 4];
+}
+
+let lastYDomain = null;
+function refreshYAxis(pts) {
+  const vals = pts.map(p => p[1]).filter(v => v != null);
+  if (!vals.length) return;
+  const domain = niceYDomain(vals);
+  // Smooth rescale — only update if domain changed meaningfully
+  if (lastYDomain && Math.abs(domain[0] - lastYDomain[0]) < 0.01 && Math.abs(domain[1] - lastYDomain[1]) < 0.01) return;
+  lastYDomain = domain;
+  cySc.domain(domain);
+  const span = domain[1] - domain[0];
+  const step = span <= 2.5 ? 0.25 : span <= 5 ? 0.5 : 1.0;
+  const ticks = d3.range(domain[0], domain[1] + step, step);
+  cyGridG.call(d3.axisLeft(cySc).tickSize(-CW).tickValues(ticks).tickFormat(''));
+  cyAxisG.call(d3.axisLeft(cySc).tickValues(ticks).tickFormat(d => d.toFixed(2) + '%'));
+  cyGridG.selectAll('line').attr('stroke','#111a2c').attr('stroke-dasharray','2,4');
+  cyGridG.selectAll('path').attr('stroke','none');
+  cyAxisG.selectAll('text').attr('fill','#5a6a8a').attr('font-size','9px').attr('font-family',"'IBM Plex Mono',monospace");
+  cyAxisG.selectAll('path, line').attr('stroke','#1e2d45');
+  // Redraw ghost lines with new scale
+  ghostG.selectAll('.ghost-path').each(function(d) { d3.select(this).attr('d', lineGen(d)); });
+}
 
 // bracket lines for 3 spreads
 const bDefs = [
@@ -523,7 +574,33 @@ function update(idx) {
 
   // ── Yield curve ──
   const pts = allTenors.map(([k, yr]) => [yr, d[k]]).filter(p => p[1] != null);
-  const slopeCol = sp.s102 == null ? '#4fa3e8' : sp.s102 > 2.5 ? '#34d399' : sp.s102 > 1 ? '#4fa3e8' : sp.s102 > 0 ? '#f59e0b' : '#f87171';
+
+  // 1. Rescale Y to visible data range FIRST, then draw everything
+  refreshYAxis(pts);
+
+  // 2. Curve shape classification & colour
+  const s102  = sp.s102;
+  const s305  = sp.s305;
+  const s3010 = sp.s3010;
+  const slopeCol = s102 == null ? '#4fa3e8' : s102 > 2.5 ? '#34d399' : s102 > 1 ? '#4fa3e8' : s102 > 0 ? '#f59e0b' : '#f87171';
+
+  // Shape label: classify curve
+  let shapeTxt, shapeCol;
+  if (s102 == null) { shapeTxt = '—'; shapeCol = '#6a7d9e'; }
+  else if (s102 > 2.0)  { shapeTxt = 'STEEP ▲'; shapeCol = '#34d399'; }
+  else if (s102 > 0.75) { shapeTxt = 'NORMAL ↗'; shapeCol = '#4fa3e8'; }
+  else if (s102 > 0.25) { shapeTxt = 'FLAT →'; shapeCol = '#f59e0b'; }
+  else if (s102 > 0)    { shapeTxt = 'VERY FLAT ⟶'; shapeCol = '#f97316'; }
+  else                  { shapeTxt = 'INVERTED ▼'; shapeCol = '#f87171'; }
+  shapeLabel.text(shapeTxt).attr('fill', shapeCol);
+
+  // Update spread pills in legend
+  if (document.getElementById('lpill-0')) {
+    document.getElementById('lpill-0').textContent = '30–5Y: ' + (s305 != null ? (s305>=0?'+':'')+s305.toFixed(2)+'%' : '—');
+    document.getElementById('lpill-1').textContent = '10–2Y: ' + (s102 != null ? (s102>=0?'+':'')+s102.toFixed(2)+'%' : '—');
+    document.getElementById('lpill-2').textContent = '30–10Y: ' + (s3010 != null ? (s3010>=0?'+':'')+s3010.toFixed(2)+'%' : '—');
+  }
+
   curvePath.attr('d', lineGen(pts)).attr('stroke', slopeCol);
   areaPath.attr('d', areaGen(pts));
 
@@ -647,7 +724,9 @@ function update(idx) {
 // ════════════════════════════════════════════════════════════════
 // PLAYBACK
 // ════════════════════════════════════════════════════════════════
-let timer = null, idx = 0, playing = false;
+// Default start: 2 years ago from latest data point (2024-02-28 = index 1115)
+const START_IDX = 1115;
+let timer = null, idx = START_IDX, playing = false;
 const getSpeed = () => +document.getElementById('speed-select').value;
 
 function step() {
@@ -661,10 +740,10 @@ function pause() { playing = false; clearTimeout(timer); document.getElementById
 
 document.getElementById('btn-play').addEventListener('click', play);
 document.getElementById('btn-pause').addEventListener('click', pause);
-document.getElementById('btn-reset').addEventListener('click', () => { pause(); idx = 0; update(0); });
+document.getElementById('btn-reset').addEventListener('click', () => { pause(); idx = START_IDX; update(START_IDX); });
 document.getElementById('slider').addEventListener('input', function() { pause(); idx = +this.value; update(idx); });
 
-update(0);
+update(START_IDX);
 </script>
 </body>
 </html>
