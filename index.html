@@ -245,6 +245,14 @@ button {
 }
 button:hover { background: #102040; border-color: var(--blue); }
 button.active { background: #0e2a58; border-color: var(--amber); color: var(--amber); }
+.preset-btn {
+  color: var(--txt2);
+  border-color: var(--border);
+  padding: 5px 10px;
+  letter-spacing: 1.2px;
+}
+.preset-btn:hover { border-color: var(--green); color: var(--green); background: #001a08; }
+.preset-btn.active { background: #001a10; border-color: var(--green); color: var(--green); }
 select {
   font-family: var(--mono);
   font-size: .68rem;
@@ -699,7 +707,12 @@ svg { width:100%; display:block; overflow:visible; }
     <button id="btn-play">▶ PLAY</button>
     <button id="btn-pause">⏸ PAUSE</button>
     <button id="btn-reset">⏮ RESET</button>
-    <span style="font-family:var(--mono);font-size:.7rem;color:var(--txt2)">SPEED</span>
+    <span style="font-family:var(--mono);font-size:.6rem;color:var(--txt3);letter-spacing:1px">PRESET</span>
+    <button class="preset-btn" data-preset="1m">1M</button>
+    <button class="preset-btn" data-preset="3m">3M</button>
+    <button class="preset-btn" data-preset="1y">1Y</button>
+    <button class="preset-btn" data-preset="all">ALL</button>
+    <span style="font-family:var(--mono);font-size:.6rem;color:var(--txt3);letter-spacing:1px;margin-left:4px">SPEED</span>
     <select id="speed-select">
       <option value="300">SLOW</option>
       <option value="100" selected>NORMAL</option>
@@ -709,7 +722,7 @@ svg { width:100%; display:block; overflow:visible; }
   </div>
   <div id="slider-wrap">
     <span class="tick-lbl">2019</span>
-    <input type="range" id="slider" min="0" max="1637" value="1115" step="1">
+    <input type="range" id="slider" min="0" max="1637" value="1637" step="1">
     <span class="tick-lbl">2026</span>
   </div>
 </div>
@@ -865,14 +878,14 @@ pillData.forEach((p, i) => {
     .attr('fill',p.color).attr('id', p.id).text(p.label + ': —');
 });
 
-// ghost history (every 12 obs) — paths stored so they redraw when Y rescales
-const ghostG = cg.append('g').attr('opacity', .09);
+// ghost history (every 60 obs ≈ quarterly — reduces overlap clutter)
+const ghostG = cg.append('g').attr('opacity', .06);
 const ghostPts = [];
-for (let i = 0; i < N; i += 12) {
+for (let i = 0; i < N; i += 60) {
   const pts = allTenors.map(([k, yr]) => [yr, RAW[i][k]]).filter(p => p[1] != null);
   if (pts.length > 3) {
     ghostPts.push(pts);
-    ghostG.append('path').datum(pts).attr('fill','none').attr('stroke','#4fa3e8').attr('stroke-width',.7).attr('class','ghost-path');
+    ghostG.append('path').datum(pts).attr('fill','none').attr('stroke','#4fa3e8').attr('stroke-width',.6).attr('class','ghost-path');
   }
 }
 
@@ -1619,9 +1632,10 @@ function updateBBPanel(idx) {
 // ════════════════════════════════════════════════════════════════
 // PLAYBACK
 // ════════════════════════════════════════════════════════════════
-// Default start: 2 years ago from latest data point (2024-02-28 = index 1115)
-const START_IDX = 1115;
-let timer = null, idx = START_IDX, playing = false;
+// Default: show the most recent (last) data date on load
+const LAST_IDX  = N - 1;
+const START_IDX = LAST_IDX; // kept for reset
+let timer = null, idx = LAST_IDX, playing = false;
 const getSpeed = () => +document.getElementById('speed-select').value;
 
 function step() {
@@ -1630,13 +1644,48 @@ function step() {
   if (idx < N - 1) { idx++; timer = setTimeout(step, getSpeed()); }
   else { playing = false; document.getElementById('btn-play').classList.remove('active'); }
 }
-function play()  { if (idx >= N-1) idx = 0; playing = true; document.getElementById('btn-play').classList.add('active'); step(); }
+function play()  { playing = true; document.getElementById('btn-play').classList.add('active'); step(); }
 function pause() { playing = false; clearTimeout(timer); document.getElementById('btn-play').classList.remove('active'); }
 
-document.getElementById('btn-play').addEventListener('click', play);
+// Preset playback — jump to start date then play to end
+function playPreset(preset) {
+  pause();
+  let startIdx;
+  if      (preset === '1m')  startIdx = Math.max(0, idxNDaysBack(LAST_IDX, 30));
+  else if (preset === '3m')  startIdx = Math.max(0, idxNDaysBack(LAST_IDX, 90));
+  else if (preset === '1y')  startIdx = Math.max(0, idxNDaysBack(LAST_IDX, 365));
+  else                       startIdx = 0; // ALL
+  idx = startIdx;
+  update(idx);
+  // small delay so user sees the start frame before playback begins
+  setTimeout(() => play(), 250);
+}
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    playPreset(this.dataset.preset);
+  });
+});
+
+document.getElementById('btn-play').addEventListener('click', () => {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  play();
+});
 document.getElementById('btn-pause').addEventListener('click', pause);
-document.getElementById('btn-reset').addEventListener('click', () => { pause(); idx = START_IDX; update(START_IDX); });
-document.getElementById('slider').addEventListener('input', function() { pause(); idx = +this.value; update(idx); });
+document.getElementById('btn-reset').addEventListener('click', () => {
+  pause();
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  idx = LAST_IDX;
+  update(LAST_IDX);
+});
+document.getElementById('slider').addEventListener('input', function() {
+  pause();
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  idx = +this.value;
+  update(idx);
+});
 
 // ── Master rolling window slider ──
 function updateWindowLabel(days) {
@@ -1663,7 +1712,12 @@ document.getElementById('window-slider').addEventListener('input', function() {
 
 updateWindowLabel(365);
 
-update(START_IDX);
+// Set slider max to actual data length
+document.getElementById('slider').max = N - 1;
+document.getElementById('slider').value = N - 1;
+
+// Initial render at last (most recent) date
+update(LAST_IDX);
 </script>
 </body>
 </html>
