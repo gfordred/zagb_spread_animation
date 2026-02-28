@@ -9,16 +9,23 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
 :root {
-  --bg:       #060910;
-  --bg2:      #0b1020;
-  --bg3:      #0f1628;
-  --border:   #1a2540;
-  --border2:  #243255;
-  --txt:      #c8d4e8;
-  --txt2:     #6a7d9e;
-  --txt3:     #3d4f6a;
+  --bg:       #04060d;
+  --bg2:      #080e1c;
+  --bg3:      #0b1222;
+  --bg4:      #0d1628;
+  --border:   #162038;
+  --border2:  #1e2e4e;
+  --border3:  #243460;
+  --txt:      #d4dff0;
+  --txt2:     #6a80a8;
+  --txt3:     #374e72;
+  --amber:    #ff9800;
+  --amber2:   #ffc040;
   --gold:     #f0c040;
   --blue:     #4fa3e8;
+  --blue2:    #2d7cc8;
+  --green:    #22c55e;
+  --red:      #f04040;
   --c1:       #f59e0b;
   --c2:       #34d399;
   --c3:       #a78bfa;
@@ -35,87 +42,180 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 14px 32px;
-  gap: 12px;
+  padding: 0 0 40px;
+  gap: 0;
+}
+/* scanline overlay */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background: repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,.08) 3px, rgba(0,0,0,.08) 4px);
+  pointer-events:none;
+  z-index:999;
 }
 
-/* ── Header ── */
-.header {
+/* ── Content wrapper ── */
+.content-wrap {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1280px;
+  padding: 0 14px;
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Top bar (Bloomberg orange band) ── */
+.topbar {
+  width: 100%;
+  background: #0a0f1e;
+  border-bottom: 2px solid var(--amber);
+  padding: 0 14px;
+  display: flex;
+  align-items: stretch;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 10px;
-  flex-wrap: wrap;
-  gap: 6px;
+  gap: 0;
+  min-height: 44px;
 }
-.header h1 {
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.topbar-brand {
   font-family: var(--mono);
-  font-size: clamp(.78rem, 2.5vw, 1rem);
+  font-size: .95rem;
   font-weight: 600;
-  color: var(--blue);
-  letter-spacing: 2px;
+  color: var(--amber);
+  letter-spacing: 3px;
   text-transform: uppercase;
+  padding: 0 16px 0 0;
+  border-right: 1px solid var(--border2);
+  margin-right: 16px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.header .sub {
+.topbar-brand .flag { font-size: 1.1rem; }
+.topbar-sub {
   font-family: var(--mono);
-  font-size: clamp(.55rem, 1.8vw, .68rem);
-  color: var(--txt2);
-  letter-spacing: 1px;
+  font-size: .58rem;
+  color: var(--txt3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-#date-display {
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.topbar-date {
   font-family: var(--mono);
-  font-size: clamp(.85rem, 3vw, 1.15rem);
+  font-size: .92rem;
   font-weight: 600;
-  color: var(--gold);
+  color: var(--amber2);
   letter-spacing: 2px;
+  white-space: nowrap;
+}
+.topbar-clock {
+  font-family: var(--mono);
+  font-size: .72rem;
+  color: var(--txt3);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.topbar-badge {
+  font-family: var(--mono);
+  font-size: .52rem;
+  color: var(--amber);
+  border: 1px solid var(--amber);
+  border-radius: 3px;
+  padding: 2px 6px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: .7;
+}
+
+/* ── Section label strip ── */
+.section-label {
+  font-family: var(--mono);
+  font-size: .52rem;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  padding: 6px 0 3px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.section-label::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 10px;
+  background: var(--amber);
+  border-radius: 2px;
+  opacity: .7;
 }
 
 /* ── Panels ── */
 .panel {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
+  border-radius: 6px;
+  padding: 10px 14px;
   width: 100%;
-  max-width: 1200px;
 }
 .panel-label {
   font-family: var(--mono);
-  font-size: .6rem;
+  font-size: .52rem;
   color: var(--txt3);
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.panel-label::before {
+  content:'';
+  display:inline-block;
+  width:2px;
+  height:9px;
+  background:var(--blue);
+  border-radius:1px;
+  opacity:.7;
 }
 
 /* ── Stats bar ── */
 .stats-bar {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .stat {
-  background: var(--bg3);
+  background: var(--bg4);
   border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 5px 10px;
-  min-width: 64px;
-  flex: 1 1 64px;
+  border-radius: 4px;
+  padding: 4px 9px;
+  min-width: 62px;
+  flex: 1 1 62px;
 }
 .stat-lbl {
   font-family: var(--mono);
-  font-size: .56rem;
+  font-size: .5rem;
   color: var(--txt3);
   text-transform: uppercase;
   letter-spacing: .8px;
 }
 .stat-val {
   font-family: var(--mono);
-  font-size: clamp(.7rem, 2vw, .82rem);
+  font-size: clamp(.68rem, 2vw, .8rem);
   font-weight: 500;
   margin-top: 1px;
 }
@@ -130,30 +230,31 @@ body {
 }
 button {
   font-family: var(--mono);
-  font-size: .72rem;
-  background: var(--bg3);
+  font-size: .68rem;
+  background: var(--bg4);
   color: var(--blue);
   border: 1px solid var(--border2);
-  border-radius: 4px;
-  padding: 6px 14px;
+  border-radius: 3px;
+  padding: 5px 13px;
   cursor: pointer;
-  letter-spacing: .5px;
-  transition: all .15s;
-  min-height: 34px;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  transition: all .12s;
+  min-height: 30px;
   touch-action: manipulation;
 }
-button:hover { background: #162038; }
-button.active { background: #1a3a6e; border-color: var(--blue); color: #fff; }
+button:hover { background: #102040; border-color: var(--blue); }
+button.active { background: #0e2a58; border-color: var(--amber); color: var(--amber); }
 select {
   font-family: var(--mono);
-  font-size: .72rem;
-  background: var(--bg3);
+  font-size: .68rem;
+  background: var(--bg4);
   color: var(--blue);
   border: 1px solid var(--border2);
-  border-radius: 4px;
-  padding: 6px 10px;
+  border-radius: 3px;
+  padding: 5px 10px;
   cursor: pointer;
-  min-height: 34px;
+  min-height: 30px;
 }
 #slider-wrap { display:flex; align-items:center; gap:8px; margin-top:8px; width:100%; }
 #slider { flex:1; accent-color: var(--blue); cursor:pointer; height:4px; min-height:20px; }
@@ -164,11 +265,10 @@ select {
 /* ── Master window slider ── */
 .window-panel {
   width: 100%;
-  max-width: 1200px;
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
+  border-radius: 6px;
+  padding: 8px 14px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -215,14 +315,13 @@ svg { width:100%; display:block; overflow:visible; }
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   width: 100%;
-  max-width: 1200px;
 }
 @media(max-width:760px){ .worm-grid { grid-template-columns:1fr; } }
 .worm-panel {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 6px;
+  padding: 9px 12px;
 }
 .worm-title {
   font-family: var(--mono);
@@ -258,20 +357,324 @@ svg { width:100%; display:block; overflow:visible; }
   z-index:200;
   line-height:1.7;
 }
+
+/* ══ BLOOMBERG RECENT MOVES PANEL ══════════════════════════════ */
+.bb-panel {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--amber);
+  border-radius: 6px;
+  padding: 10px 14px 14px;
+}
+.bb-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bb-title {
+  font-family: var(--mono);
+  font-size: .62rem;
+  color: var(--amber);
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bb-live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  display: inline-block;
+  animation: bb-pulse 1.6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes bb-pulse {
+  0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(34,197,94,.6); }
+  50%      { opacity:.5; box-shadow:0 0 0 6px rgba(34,197,94,0); }
+}
+.bb-meta {
+  font-family: var(--mono);
+  font-size: .54rem;
+  color: var(--txt3);
+  letter-spacing: .8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.bb-meta-pill {
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 1px 7px;
+  color: var(--txt2);
+}
+
+/* ── period toggle pills ── */
+.bb-period-row {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.bb-period-lbl {
+  font-family: var(--mono);
+  font-size: .5rem;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-right: 4px;
+}
+.bb-period-btn {
+  font-family: var(--mono);
+  font-size: .55rem;
+  background: var(--bg4);
+  color: var(--txt3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 9px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all .12s;
+  min-height: unset;
+}
+.bb-period-btn:hover { border-color: var(--amber); color: var(--amber); background: #1a1200; }
+.bb-period-btn.bb-active { background: #1e1400; border-color: var(--amber); color: var(--amber); }
+
+.bb-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 10px;
+}
+@media(max-width:820px) { .bb-grid { grid-template-columns: 1fr; } }
+
+/* ── sub-card ── */
+.bb-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.bb-card-title {
+  font-family: var(--mono);
+  font-size: .5rem;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 5px 10px 4px;
+  border-bottom: 1px solid var(--border);
+  background: #060b14;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bb-card-title .ct-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── table ── */
+.bb-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.bb-table th {
+  font-family: var(--mono);
+  font-size: .48rem;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  padding: 3px 8px 3px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  background: #060b14;
+}
+.bb-table th:first-child { text-align: left; }
+.bb-table th.sparkline-th { text-align: center; min-width: 80px; }
+.bb-table th.bb-active-col { color: var(--amber); }
+.bb-table td {
+  font-family: var(--mono);
+  font-size: .7rem;
+  padding: 3px 8px;
+  text-align: right;
+  border-bottom: 1px solid rgba(22,32,56,.6);
+  white-space: nowrap;
+  vertical-align: middle;
+  transition: background .25s;
+}
+.bb-table td:first-child {
+  text-align: left;
+  color: var(--txt2);
+  font-size: .63rem;
+  letter-spacing: .6px;
+  padding-left: 10px;
+}
+.bb-table tr:last-child td { border-bottom: none; }
+.bb-table tr:hover td { background: rgba(20,40,80,.35) !important; }
+/* heat cell backgrounds */
+.heat-pos-1 { background: rgba(34,197,94,.06); }
+.heat-pos-2 { background: rgba(34,197,94,.12); }
+.heat-pos-3 { background: rgba(34,197,94,.22); }
+.heat-neg-1 { background: rgba(240,64,64,.06); }
+.heat-neg-2 { background: rgba(240,64,64,.12); }
+.heat-neg-3 { background: rgba(240,64,64,.22); }
+/* flash animation for big moves */
+@keyframes bb-flash-pos { 0%{background:rgba(34,197,94,.45)} 100%{background:transparent} }
+@keyframes bb-flash-neg { 0%{background:rgba(240,64,64,.45)} 100%{background:transparent} }
+.flash-pos { animation: bb-flash-pos .6s ease-out forwards; }
+.flash-neg { animation: bb-flash-neg .6s ease-out forwards; }
+.bb-chg-pos { color: var(--green); }
+.bb-chg-neg { color: var(--red); }
+.bb-chg-neu { color: var(--txt3); }
+.bb-chg-big-pos { color: #00ff88; font-weight: 600; }
+.bb-chg-big-neg { color: #ff2020; font-weight: 600; }
+.bb-level   { color: var(--txt); font-weight: 500; }
+.bb-bps     { font-size: .55rem; color: var(--txt3); vertical-align: super; margin-left: 1px; }
+
+/* ── sparkline td ── */
+.bb-spark-td { text-align: center; padding: 1px 6px; vertical-align: middle; }
+.bb-spark { overflow: visible; display: block; }
+
+/* ── 1D bar chart ── */
+.bb-bar-panel {
+  margin-top: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.bb-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px 4px;
+  border-bottom: 1px solid var(--border);
+  background: #060b14;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bb-bar-title {
+  font-family: var(--mono);
+  font-size: .5rem;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.bb-bar-toggles { display: flex; gap: 4px; }
+#bb-bar-svg {
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+.bb-bar-axis text { fill:#374e72; font-size:7.5px; font-family:'IBM Plex Mono',monospace; }
+.bb-bar-axis path, .bb-bar-axis line { stroke:#162038; }
+.bb-bar-grid line { stroke:#0c1320; stroke-dasharray:2,4; }
+.bb-bar-grid path { stroke:none; }
+/* zero line accent */
+.bb-zero-rule { stroke: #243460; stroke-width: 1.5; }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<div class="header">
-  <div>
-    <h1>🇿🇦 SA GOVT YIELD CURVE</h1>
-    <div class="sub">Repo · T-Bills · ZARGB 2→30Y · Oct 2019 – Feb 2026</div>
+<!-- Bloomberg terminal top bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-brand"><span class="flag">🇿🇦</span>SA YIELD TERMINAL</div>
+    <div class="topbar-sub">SARB Repo · SATB 3M–12M · ZARGB 2Y–30Y · Oct 2019 – Feb 2026</div>
   </div>
-  <div id="date-display">—</div>
+  <div class="topbar-right">
+    <div class="topbar-badge">LIVE</div>
+    <div class="topbar-date" id="date-display">—</div>
+    <div class="topbar-clock" id="clock-display">—</div>
+  </div>
+</div>
+
+<div class="content-wrap">
+
+<!-- ══ BLOOMBERG RECENT MOVES PANEL ════════════════════════════ -->
+<div class="bb-panel">
+  <div class="bb-header-row">
+    <div class="bb-title"><span class="bb-live-dot"></span>Recent Yield Moves &amp; Spreads</div>
+    <div class="bb-meta">
+      <span class="bb-meta-pill">bps = basis points</span>
+      <span class="bb-meta-pill" id="bb-curve-shape">—</span>
+      <span style="color:var(--txt3)">vs current date</span>
+    </div>
+  </div>
+  <div class="bb-period-row">
+    <span class="bb-period-lbl">Highlight:</span>
+    <button class="bb-period-btn bb-active" data-period="1d" onclick="setBBPeriod('1d',this)">1D</button>
+    <button class="bb-period-btn" data-period="1w" onclick="setBBPeriod('1w',this)">1W</button>
+    <button class="bb-period-btn" data-period="1m" onclick="setBBPeriod('1m',this)">1M</button>
+    <button class="bb-period-btn" data-period="ytd" onclick="setBBPeriod('ytd',this)">YTD</button>
+  </div>
+
+  <div class="bb-grid">
+    <!-- Yields table -->
+    <div class="bb-card">
+      <div class="bb-card-title"><span class="ct-dot" style="background:var(--blue)"></span>Key Yields</div>
+      <table class="bb-table" id="bb-yields-table">
+        <thead>
+          <tr>
+            <th>Tenor</th>
+            <th>Level</th>
+            <th>1D</th>
+            <th>1W</th>
+            <th>1M</th>
+            <th>YTD</th>
+            <th class="sparkline-th">30D Spark</th>
+          </tr>
+        </thead>
+        <tbody id="bb-yields-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Spreads table -->
+    <div class="bb-card">
+      <div class="bb-card-title"><span class="ct-dot" style="background:var(--amber)"></span>Key Spreads</div>
+      <table class="bb-table" id="bb-spreads-table">
+        <thead>
+          <tr>
+            <th>Spread</th>
+            <th>Level</th>
+            <th>1D</th>
+            <th>1W</th>
+            <th>1M</th>
+            <th>YTD</th>
+            <th class="sparkline-th">30D Spark</th>
+          </tr>
+        </thead>
+        <tbody id="bb-spreads-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Moves bar chart -->
+  <div class="bb-bar-panel">
+    <div class="bb-bar-header">
+      <div class="bb-bar-title" id="bb-bar-label">1-Day Yield &amp; Spread Changes (bps)</div>
+      <div class="bb-bar-toggles">
+        <button class="bb-period-btn bb-active" data-bperiod="1d" onclick="setBBBarPeriod('1d',this)">1D</button>
+        <button class="bb-period-btn" data-bperiod="1w" onclick="setBBBarPeriod('1w',this)">1W</button>
+        <button class="bb-period-btn" data-bperiod="1m" onclick="setBBBarPeriod('1m',this)">1M</button>
+        <button class="bb-period-btn" data-bperiod="ytd" onclick="setBBBarPeriod('ytd',this)">YTD</button>
+      </div>
+    </div>
+    <svg id="bb-bar-svg" viewBox="0 0 1160 150"></svg>
+  </div>
 </div>
 
 <!-- ══ YIELD CURVE PANEL ══════════════════════════════════════════ -->
+<div class="section-label">Full Yield Curve · Animated Historical Playback</div>
 <div class="panel">
   <div class="panel-label">Full Yield Curve</div>
   <svg id="curve-svg" viewBox="0 0 1160 290"></svg>
@@ -313,12 +716,13 @@ svg { width:100%; display:block; overflow:visible; }
 
 <!-- ══ MASTER ROLLING WINDOW ════════════════════════════════════ -->
 <div class="window-panel">
-  <label>📅 Rolling Window</label>
+  <label>Rolling Window</label>
   <input type="range" id="window-slider" min="30" max="1825" value="365" step="5">
   <div id="window-val">365 days</div>
 </div>
 
 <!-- ══ WORM CHARTS (4 spreads) ═══════════════════════════════════ -->
+<div class="section-label">Spread Worm Charts · Rolling Distribution</div>
 <div class="worm-grid">
 
   <div class="worm-panel">
@@ -367,6 +771,7 @@ svg { width:100%; display:block; overflow:visible; }
 
 </div>
 
+</div><!-- /content-wrap -->
 <div class="tooltip-box" id="tooltip"></div>
 
 <script>
@@ -673,6 +1078,9 @@ function update(idx) {
 
   // stats
   document.getElementById('date-display').textContent = d.report_date;
+  // push shape to BB panel
+  const bbShape = document.getElementById('bb-curve-shape');
+  if (bbShape) bbShape.textContent = shapeTxt + ' (' + (s102 != null ? (s102>=0?'+':'')+s102.toFixed(2)+'%' : '—') + ')';
   document.getElementById('sv-repo').textContent = fmt(d.REPO);
   document.getElementById('sv-3m').textContent   = fmt(d.SATB3M);
   document.getElementById('sv-6m').textContent   = fmt(d.SATB6M);
@@ -772,6 +1180,440 @@ function update(idx) {
       }
     }
   });
+
+  // Bloomberg panel
+  updateBBPanel(idx);
+}
+
+// ════════════════════════════════════════════════════════════════
+// BLOOMBERG RECENT MOVES PANEL
+// ════════════════════════════════════════════════════════════════
+
+// ── Live clock (uses data date, not wall clock, since this is historical)
+function tickClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  const el = document.getElementById('clock-display');
+  if (el) el.textContent = `${h}:${m}:${s} SAST`;
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+// ── Period state ──
+let bbHighlightPeriod = '1d'; // which column gets heat highlight in table
+let bbBarPeriod = '1d';       // which period the bar chart shows
+
+function setBBPeriod(p, btn) {
+  bbHighlightPeriod = p;
+  document.querySelectorAll('.bb-period-row .bb-period-btn').forEach(b => b.classList.remove('bb-active'));
+  btn.classList.add('bb-active');
+  // update active-col header highlight
+  document.querySelectorAll('#bb-yields-table th, #bb-spreads-table th').forEach(th => {
+    th.classList.remove('bb-active-col');
+    if (th.dataset.period === p) th.classList.add('bb-active-col');
+  });
+  if (bbLastBarData !== null) updateBBPanel(lastBBIdx);
+}
+
+function setBBBarPeriod(p, btn) {
+  bbBarPeriod = p;
+  document.querySelectorAll('.bb-bar-toggles .bb-period-btn').forEach(b => b.classList.remove('bb-active'));
+  btn.classList.add('bb-active');
+  const labels = { '1d':'1-Day','1w':'1-Week','1m':'1-Month','ytd':'YTD' };
+  const lbl = document.getElementById('bb-bar-label');
+  if (lbl) lbl.textContent = `${labels[p]} Yield & Spread Changes (bps)`;
+  if (bbLastBarData !== null) updateBBPanel(lastBBIdx);
+}
+
+// Mark th headers with data-period
+function tagTableHeaders() {
+  ['bb-yields-table','bb-spreads-table'].forEach(id => {
+    const ths = document.querySelectorAll(`#${id} thead th`);
+    // order: Tenor/Spread, Level, 1D, 1W, 1M, YTD, Spark
+    const periods = [null, null, '1d', '1w', '1m', 'ytd', null];
+    ths.forEach((th, i) => { if (periods[i]) th.dataset.period = periods[i]; });
+  });
+  // set initial active
+  document.querySelectorAll('#bb-yields-table th[data-period="1d"], #bb-spreads-table th[data-period="1d"]')
+    .forEach(th => th.classList.add('bb-active-col'));
+}
+
+// Tenors to show in the yields table
+const BB_TENORS = [
+  { key: 'REPO',    label: 'Repo',   color: '#6a80a8' },
+  { key: 'SATB3M',  label: '3M TB',  color: '#6a80a8' },
+  { key: 'SATB6M',  label: '6M TB',  color: '#6a80a8' },
+  { key: 'SATB12M', label: '12M TB', color: '#6a80a8' },
+  { key: 'ZARGB2',  label: '2Y',     color: '#4fa3e8' },
+  { key: 'ZARGB5',  label: '5Y',     color: '#4fa3e8' },
+  { key: 'ZARGB10', label: '10Y',    color: '#4fa3e8' },
+  { key: 'ZARGB15', label: '15Y',    color: '#4fa3e8' },
+  { key: 'ZARGB20', label: '20Y',    color: '#4fa3e8' },
+  { key: 'ZARGB30', label: '30Y',    color: '#4fa3e8' },
+];
+
+const BB_SPREADS = [
+  { key: 's305',  label: '30Y–5Y',  color: '#f59e0b' },
+  { key: 's102',  label: '10Y–2Y',  color: '#34d399' },
+  { key: 's3010', label: '30Y–10Y', color: '#a78bfa' },
+  { key: 's2r',   label: '2Y–Repo', color: '#f87171' },
+];
+
+// Find index approximately N calendar days ago from idx
+function idxNDaysBack(refIdx, days) {
+  const refDate = DATES[refIdx];
+  const target  = new Date(refDate);
+  target.setDate(target.getDate() - days);
+  let lo = 0, hi = refIdx;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (DATES[mid] < target) lo = mid + 1; else hi = mid;
+  }
+  return lo;
+}
+
+// Find index at start of current year
+function idxYTD(refIdx) {
+  const yr = DATES[refIdx].getFullYear();
+  for (let i = refIdx; i >= 0; i--) {
+    if (DATES[i].getFullYear() < yr) return i + 1;
+  }
+  return 0;
+}
+
+// Get the "comparison" index for a period string
+function idxForPeriod(refIdx, period) {
+  if (period === '1d')  return Math.max(0, refIdx - 1);
+  if (period === '1w')  return idxNDaysBack(refIdx, 7);
+  if (period === '1m')  return idxNDaysBack(refIdx, 30);
+  if (period === 'ytd') return idxYTD(refIdx);
+  return refIdx;
+}
+
+// Heat class for a bps change value
+function heatClass(bps) {
+  if (bps == null || bps === 0) return '';
+  const abs = Math.abs(bps);
+  const dir = bps > 0 ? 'pos' : 'neg';
+  if (abs >= 15) return `heat-${dir}-3`;
+  if (abs >= 7)  return `heat-${dir}-2`;
+  if (abs >= 3)  return `heat-${dir}-1`;
+  return '';
+}
+
+// Format bps change cell with heat class applied to the TD
+function fmtBps(delta, isHighlight, prevBps) {
+  if (delta == null) return { html: '<span class="bb-chg-neu">—</span>', hclass: '' };
+  const bps  = Math.round(delta * 100);
+  const abs  = Math.abs(bps);
+  let cls;
+  if (isHighlight) {
+    cls = abs >= 10 ? (bps > 0 ? 'bb-chg-big-pos' : 'bb-chg-big-neg')
+                    : (bps > 0 ? 'bb-chg-pos' : bps < 0 ? 'bb-chg-neg' : 'bb-chg-neu');
+  } else {
+    cls = bps > 0 ? 'bb-chg-pos' : bps < 0 ? 'bb-chg-neg' : 'bb-chg-neu';
+  }
+  const sign = bps > 0 ? '+' : '';
+  const html = `<span class="${cls}">${sign}${bps}<span class="bb-bps">bp</span></span>`;
+  const hclass = isHighlight ? heatClass(bps) : '';
+  // detect big flash: >=10 bps and changed direction vs previous
+  const flash = isHighlight && abs >= 10 && prevBps != null && Math.sign(bps) !== Math.sign(prevBps)
+    ? (bps > 0 ? 'flash-pos' : 'flash-neg')
+    : '';
+  return { html, hclass, flash, bps };
+}
+
+// Build sparkline — 30 trading day window, clean with ref line
+const SPARK_W = 80, SPARK_H = 26;
+function buildSparkline(refIdx, getter) {
+  const lookback = 30;
+  const startI   = Math.max(0, refIdx - lookback);
+  const vals = [];
+  for (let i = startI; i <= refIdx; i++) {
+    const v = getter(i);
+    if (v != null) vals.push({ i, v });
+  }
+  if (vals.length < 2) return `<svg class="bb-spark" width="${SPARK_W}" height="${SPARK_H}"></svg>`;
+
+  const vMin = d3.min(vals, d => d.v);
+  const vMax = d3.max(vals, d => d.v);
+  const vRange = vMax - vMin || 0.001;
+
+  const xSc = d3.scaleLinear().domain([vals[0].i, vals[vals.length-1].i]).range([1, SPARK_W - 1]);
+  const ySc = d3.scaleLinear().domain([vMin - vRange*0.15, vMax + vRange*0.15]).range([SPARK_H - 2, 2]);
+
+  const ptArr = vals.map(d => [xSc(d.i), ySc(d.v)]);
+  const pts   = ptArr.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const lastX = ptArr[ptArr.length-1][0].toFixed(1);
+  const lastY = ptArr[ptArr.length-1][1].toFixed(1);
+  const firstX = ptArr[0][0].toFixed(1);
+
+  const areaPath = `M${firstX},${SPARK_H} L${ptArr.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' L')} L${lastX},${SPARK_H} Z`;
+
+  const chg = vals[vals.length-1].v - vals[0].v;
+  const lineColor = chg > 0 ? '#22c55e' : chg < 0 ? '#f04040' : '#6a80a8';
+  const fillOpacity = Math.abs(chg) > vRange * 0.3 ? 0.18 : 0.1;
+
+  // ref line at start value
+  const refY = ySc(vals[0].v).toFixed(1);
+
+  return `<svg class="bb-spark" width="${SPARK_W}" height="${SPARK_H}" viewBox="0 0 ${SPARK_W} ${SPARK_H}">
+    <line x1="1" x2="${SPARK_W-1}" y1="${refY}" y2="${refY}" stroke="#243460" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <path d="${areaPath}" fill="${lineColor}" opacity="${fillOpacity}"/>
+    <polyline points="${pts}" fill="none" stroke="${lineColor}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${lastX}" cy="${lastY}" r="2.5" fill="${lineColor}" stroke="#080e1c" stroke-width="1"/>
+  </svg>`;
+}
+
+// ── Build table rows (once, then update values in place) ──
+function buildBBTables() {
+  const yBody = document.getElementById('bb-yields-body');
+  BB_TENORS.forEach((t, i) => {
+    const tr = document.createElement('tr');
+    tr.id = `bb-yr-${i}`;
+    tr.innerHTML = `<td style="color:${t.color}">${t.label}</td>
+      <td id="bb-yl-${i}" class="bb-level">—</td>
+      <td id="bb-y1d-${i}">—</td>
+      <td id="bb-y1w-${i}">—</td>
+      <td id="bb-y1m-${i}">—</td>
+      <td id="bb-yytd-${i}">—</td>
+      <td class="bb-spark-td" id="bb-ysp-${i}"></td>`;
+    yBody.appendChild(tr);
+  });
+
+  const sBody = document.getElementById('bb-spreads-body');
+  BB_SPREADS.forEach((s, i) => {
+    const tr = document.createElement('tr');
+    tr.id = `bb-sr-${i}`;
+    tr.innerHTML = `<td style="color:${s.color};font-weight:500">${s.label}</td>
+      <td id="bb-sl-${i}" class="bb-level">—</td>
+      <td id="bb-s1d-${i}">—</td>
+      <td id="bb-s1w-${i}">—</td>
+      <td id="bb-s1m-${i}">—</td>
+      <td id="bb-sytd-${i}">—</td>
+      <td class="bb-spark-td" id="bb-ssp-${i}"></td>`;
+    sBody.appendChild(tr);
+  });
+}
+buildBBTables();
+tagTableHeaders();
+
+// ── Bar chart setup ──
+const BBM = { top: 18, right: 16, bottom: 30, left: 68 };
+const BB_SVG_W = 1160, BB_SVG_H = 150;
+const BBW = BB_SVG_W - BBM.left - BBM.right;
+const BBH = BB_SVG_H - BBM.top  - BBM.bottom;
+
+const bbSvg = d3.select('#bb-bar-svg');
+const bbG   = bbSvg.append('g').attr('transform', `translate(${BBM.left},${BBM.top})`);
+
+// All bar series labels (tenors + spreads)
+const BB_BAR_ITEMS = [
+  ...BB_TENORS.map(t => ({ key: t.key, label: t.label, isSpread: false, color: t.color, getter: (i) => RAW[i][t.key] })),
+  ...BB_SPREADS.map(s => ({ key: s.key, label: s.label, isSpread: true,  color: s.color, getter: (i) => SPREADS[i][s.key] })),
+];
+const BB_N = BB_BAR_ITEMS.length;
+
+const bbXSc = d3.scaleBand().domain(BB_BAR_ITEMS.map(d => d.label)).range([0, BBW]).padding(0.28);
+const bbYSc = d3.scaleLinear().domain([-30, 30]).range([BBH, 0]);
+
+// Axes
+const bbXAxisG = bbG.append('g').attr('class','bb-bar-axis').attr('transform',`translate(0,${BBH})`);
+bbXAxisG.call(d3.axisBottom(bbXSc).tickSize(0))
+  .selectAll('text').attr('fill','#374e72').attr('font-size','7.5px').attr('font-family',"'IBM Plex Mono',monospace")
+  .attr('dy','1.1em');
+bbXAxisG.select('.domain').attr('stroke','#162038');
+
+const bbYAxisG = bbG.append('g').attr('class','bb-bar-axis');
+const bbGridG  = bbG.append('g').attr('class','bb-bar-grid');
+
+// Zero rule
+const bbZeroLine = bbG.append('line').attr('class','bb-zero-rule')
+  .attr('x1',0).attr('x2',BBW);
+
+// Bars group
+const bbBarsG = bbG.append('g');
+
+// Value labels group
+const bbLabelsG = bbG.append('g');
+
+// ── Divider between tenors and spreads ──
+const dividerX = bbXSc(BB_BAR_ITEMS[BB_TENORS.length].label) - bbXSc.bandwidth() * 0.3;
+bbG.append('line')
+  .attr('x1', dividerX).attr('x2', dividerX)
+  .attr('y1', -4).attr('y2', BBH + 6)
+  .attr('stroke','#1e2e4e').attr('stroke-width',1).attr('stroke-dasharray','3,3');
+bbG.append('text')
+  .attr('x', BBW * 0.28).attr('y', -5)
+  .attr('fill','#374e72').attr('font-size','7px').attr('font-family',"'IBM Plex Mono',monospace")
+  .attr('text-anchor','middle').text('── YIELDS ──');
+bbG.append('text')
+  .attr('x', BBW * 0.83).attr('y', -5)
+  .attr('fill','#374e72').attr('font-size','7px').attr('font-family',"'IBM Plex Mono',monospace")
+  .attr('text-anchor','middle').text('── SPREADS ──');
+
+// bps label
+bbG.append('text').attr('x',-BBM.left+2).attr('y',-5)
+  .attr('fill','#374e72').attr('font-size','7px').attr('font-family',"'IBM Plex Mono',monospace")
+  .text('bps');
+
+let bbLastBarData = null;
+let lastBBIdx     = 1115;
+
+// Helper: apply heat + flash to a TD element
+function applyHeat(tdEl, result, prevBps) {
+  // Remove old heat/flash classes
+  tdEl.className = tdEl.className.replace(/heat-\S+|flash-\S+/g, '').trim();
+  if (result.hclass) tdEl.classList.add(result.hclass);
+  // Flash only on large moves that changed sign vs previous frame
+  const abs = Math.abs(result.bps || 0);
+  if (abs >= 10 && prevBps != null && result.bps != null && Math.sign(result.bps) !== Math.sign(prevBps)) {
+    const flashCls = result.bps > 0 ? 'flash-pos' : 'flash-neg';
+    // Force reflow so animation restarts
+    tdEl.classList.remove(flashCls);
+    void tdEl.offsetWidth;
+    tdEl.classList.add(flashCls);
+  }
+}
+
+function updateBBPanel(idx) {
+  lastBBIdx = idx;
+  const d   = RAW[idx];
+  const sp  = SPREADS[idx];
+
+  const i1d  = Math.max(0, idx - 1);
+  const i1w  = idxNDaysBack(idx, 7);
+  const i1m  = idxNDaysBack(idx, 30);
+  const iYTD = idxYTD(idx);
+
+  const periodIdx = { '1d': i1d, '1w': i1w, '1m': i1m, 'ytd': iYTD };
+  const colIds    = { '1d': '1d', '1w': '1w', '1m': '1m', 'ytd': 'ytd' };
+
+  // ── Yields table ──
+  BB_TENORS.forEach((t, i) => {
+    const cur  = d[t.key];
+    const prev = { '1d': RAW[i1d][t.key], '1w': RAW[i1w][t.key], '1m': RAW[i1m][t.key], 'ytd': RAW[iYTD][t.key] };
+
+    document.getElementById(`bb-yl-${i}`).textContent = cur != null ? cur.toFixed(3) + '%' : '—';
+
+    ['1d','1w','1m','ytd'].forEach(p => {
+      const tdId = `bb-y${p}-${i}`;
+      const td   = document.getElementById(tdId);
+      const delta = (cur != null && prev[p] != null) ? cur - prev[p] : null;
+      const isHL  = p === bbHighlightPeriod;
+      // get previous bps for flash detection
+      const prevBpsVal = bbLastBarData ? null : null; // simplified — flash on sign change vs prior frame
+      const res = fmtBps(delta, isHL, null);
+      td.innerHTML = res.html;
+      applyHeat(td, res, null);
+    });
+
+    // Sparkline every 3 frames (perf)
+    if (idx % 3 === 0 || bbLastBarData === null) {
+      document.getElementById(`bb-ysp-${i}`).innerHTML =
+        buildSparkline(idx, (ii) => RAW[ii][t.key]);
+    }
+  });
+
+  // ── Spreads table ──
+  BB_SPREADS.forEach((s, i) => {
+    const cur  = sp[s.key];
+    const prev = { '1d': SPREADS[i1d][s.key], '1w': SPREADS[i1w][s.key], '1m': SPREADS[i1m][s.key], 'ytd': SPREADS[iYTD][s.key] };
+
+    document.getElementById(`bb-sl-${i}`).textContent =
+      cur != null ? (cur >= 0 ? '+' : '') + cur.toFixed(3) + '%' : '—';
+
+    ['1d','1w','1m','ytd'].forEach(p => {
+      const tdId = `bb-s${p}-${i}`;
+      const td   = document.getElementById(tdId);
+      const delta = (cur != null && prev[p] != null) ? cur - prev[p] : null;
+      const isHL  = p === bbHighlightPeriod;
+      const res = fmtBps(delta, isHL, null);
+      td.innerHTML = res.html;
+      applyHeat(td, res, null);
+    });
+
+    if (idx % 3 === 0 || bbLastBarData === null) {
+      document.getElementById(`bb-ssp-${i}`).innerHTML =
+        buildSparkline(idx, (ii) => SPREADS[ii][s.key]);
+    }
+  });
+
+  // ── Bar chart — uses bbBarPeriod ──
+  const barPrevIdx = periodIdx[bbBarPeriod];
+  const barData = BB_BAR_ITEMS.map(item => {
+    const cur  = item.getter(idx);
+    const prev = item.getter(barPrevIdx);
+    const bps  = (cur != null && prev != null) ? Math.round((cur - prev) * 100) : 0;
+    return { label: item.label, bps, color: item.color };
+  });
+
+  // Dynamic Y scale — tight with ±5 bps floor
+  const bpsVals = barData.map(b => b.bps);
+  const rawMin  = d3.min(bpsVals), rawMax = d3.max(bpsVals);
+  const bpsMin  = Math.min(rawMin - 3, -5);
+  const bpsMax  = Math.max(rawMax + 3,  5);
+  bbYSc.domain([bpsMin, bpsMax]);
+
+  // Tick step — adapt to range size
+  const bpsRange = bpsMax - bpsMin;
+  const tickStep = bpsRange <= 20 ? 5 : bpsRange <= 50 ? 10 : 20;
+  const yTicks = d3.range(Math.ceil(bpsMin / tickStep) * tickStep, bpsMax + 1, tickStep);
+
+  bbYAxisG.call(
+    d3.axisLeft(bbYSc).tickValues(yTicks)
+      .tickFormat(v => (v > 0 ? '+' : '') + v + 'bp').tickSize(3)
+  ).selectAll('text')
+    .attr('fill','#374e72').attr('font-size','7.5px')
+    .attr('font-family',"'IBM Plex Mono',monospace");
+  bbYAxisG.selectAll('path,line').attr('stroke','#162038');
+
+  bbGridG.call(d3.axisLeft(bbYSc).tickValues(yTicks).tickSize(-BBW).tickFormat(''));
+  bbGridG.selectAll('line').attr('stroke','#0c1320').attr('stroke-dasharray','2,4');
+  bbGridG.selectAll('path').attr('stroke','none');
+
+  // Zero rule
+  bbZeroLine.attr('y1', bbYSc(0)).attr('y2', bbYSc(0));
+
+  // Bars — animated
+  const dur = playing ? 55 : 260;
+  const bars = bbBarsG.selectAll('rect.bb-bar').data(barData, b => b.label);
+  bars.enter().append('rect').attr('class','bb-bar')
+      .attr('rx', 2).attr('x', b => bbXSc(b.label)).attr('width', bbXSc.bandwidth())
+      .attr('y', bbYSc(0)).attr('height', 0)
+    .merge(bars)
+      .attr('fill', b => b.bps > 0 ? '#22c55e' : b.bps < 0 ? '#f04040' : '#243460')
+      .attr('opacity', b => {
+        const abs = Math.abs(b.bps);
+        return abs >= 15 ? 1 : abs >= 7 ? 0.88 : 0.72;
+      })
+      .transition().duration(dur).ease(d3.easeCubicOut)
+      .attr('x', b => bbXSc(b.label)).attr('width', bbXSc.bandwidth())
+      .attr('y', b => b.bps >= 0 ? bbYSc(b.bps) : bbYSc(0))
+      .attr('height', b => Math.max(0, Math.abs(bbYSc(b.bps) - bbYSc(0))));
+  bars.exit().remove();
+
+  // Value labels
+  const lbls = bbLabelsG.selectAll('text.bb-blbl').data(barData, b => b.label);
+  lbls.enter().append('text').attr('class','bb-blbl')
+      .attr('text-anchor','middle').attr('font-family',"'IBM Plex Mono',monospace")
+      .attr('font-size','7px').attr('font-weight','500')
+    .merge(lbls)
+      .attr('x', b => bbXSc(b.label) + bbXSc.bandwidth() / 2)
+      .attr('fill', b => b.bps > 0 ? '#22c55e' : b.bps < 0 ? '#f04040' : '#374e72')
+      .transition().duration(dur).ease(d3.easeCubicOut)
+      .attr('y', b => {
+        const hp = Math.abs(bbYSc(b.bps) - bbYSc(0));
+        if (b.bps > 0) return Math.max(5, bbYSc(b.bps) - 3);
+        if (b.bps < 0) return Math.min(BBH - 2, bbYSc(0) + hp + 9);
+        return bbYSc(0) - 3;
+      })
+      .text(b => b.bps !== 0 ? (b.bps > 0 ? '+' : '') + b.bps : '');
+  lbls.exit().remove();
+
+  bbLastBarData = barData;
 }
 
 // ════════════════════════════════════════════════════════════════
