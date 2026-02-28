@@ -48,10 +48,12 @@ body {
   justify-content: space-between;
   border-bottom: 1px solid var(--border);
   padding-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .header h1 {
   font-family: var(--mono);
-  font-size: 1rem;
+  font-size: clamp(.78rem, 2.5vw, 1rem);
   font-weight: 600;
   color: var(--blue);
   letter-spacing: 2px;
@@ -59,13 +61,13 @@ body {
 }
 .header .sub {
   font-family: var(--mono);
-  font-size: .68rem;
+  font-size: clamp(.55rem, 1.8vw, .68rem);
   color: var(--txt2);
   letter-spacing: 1px;
 }
 #date-display {
   font-family: var(--mono);
-  font-size: 1.15rem;
+  font-size: clamp(.85rem, 3vw, 1.15rem);
   font-weight: 600;
   color: var(--gold);
   letter-spacing: 2px;
@@ -101,18 +103,19 @@ body {
   border: 1px solid var(--border);
   border-radius: 5px;
   padding: 5px 10px;
-  min-width: 72px;
+  min-width: 64px;
+  flex: 1 1 64px;
 }
 .stat-lbl {
   font-family: var(--mono);
-  font-size: .58rem;
+  font-size: .56rem;
   color: var(--txt3);
   text-transform: uppercase;
   letter-spacing: .8px;
 }
 .stat-val {
   font-family: var(--mono);
-  font-size: .82rem;
+  font-size: clamp(.7rem, 2vw, .82rem);
   font-weight: 500;
   margin-top: 1px;
 }
@@ -132,10 +135,12 @@ button {
   color: var(--blue);
   border: 1px solid var(--border2);
   border-radius: 4px;
-  padding: 5px 14px;
+  padding: 6px 14px;
   cursor: pointer;
   letter-spacing: .5px;
   transition: all .15s;
+  min-height: 34px;
+  touch-action: manipulation;
 }
 button:hover { background: #162038; }
 button.active { background: #1a3a6e; border-color: var(--blue); color: #fff; }
@@ -146,14 +151,54 @@ select {
   color: var(--blue);
   border: 1px solid var(--border2);
   border-radius: 4px;
-  padding: 5px 10px;
+  padding: 6px 10px;
   cursor: pointer;
+  min-height: 34px;
 }
 #slider-wrap { display:flex; align-items:center; gap:8px; margin-top:8px; width:100%; }
-#slider { flex:1; accent-color: var(--blue); cursor:pointer; height:3px; }
+#slider { flex:1; accent-color: var(--blue); cursor:pointer; height:4px; min-height:20px; }
 #progress-bar { height:2px; background:var(--border); border-radius:1px; margin-top:6px; }
 #progress-fill { height:100%; background:linear-gradient(90deg,#1d4ed8,var(--blue)); border-radius:1px; width:0%; }
-.tick-lbl { font-family:var(--mono); font-size:.6rem; color:var(--txt3); }
+.tick-lbl { font-family:var(--mono); font-size:.6rem; color:var(--txt3); white-space:nowrap; }
+
+/* ── Master window slider ── */
+.window-panel {
+  width: 100%;
+  max-width: 1200px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.window-panel label {
+  font-family: var(--mono);
+  font-size: .6rem;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+}
+#window-slider {
+  flex: 1;
+  min-width: 120px;
+  accent-color: var(--gold);
+  cursor: pointer;
+  height: 4px;
+  min-height: 20px;
+}
+#window-val {
+  font-family: var(--mono);
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--gold);
+  min-width: 56px;
+  text-align: right;
+  white-space: nowrap;
+}
 
 /* ── SVG defaults ── */
 svg { width:100%; display:block; overflow:visible; }
@@ -172,7 +217,7 @@ svg { width:100%; display:block; overflow:visible; }
   width: 100%;
   max-width: 1200px;
 }
-@media(max-width:680px){ .worm-grid { grid-template-columns:1fr; } }
+@media(max-width:760px){ .worm-grid { grid-template-columns:1fr; } }
 .worm-panel {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -181,18 +226,18 @@ svg { width:100%; display:block; overflow:visible; }
 }
 .worm-title {
   font-family: var(--mono);
-  font-size: .6rem;
+  font-size: clamp(.52rem, 1.8vw, .6rem);
   text-transform: uppercase;
   letter-spacing: 1.5px;
   margin-bottom: 6px;
 }
 .spread-stat-row {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   margin-top: 4px;
   flex-wrap: wrap;
 }
-.spread-stat { font-family:var(--mono); font-size:.68rem; }
+.spread-stat { font-family:var(--mono); font-size:clamp(.6rem, 1.8vw, .68rem); }
 .spread-stat span { font-weight:600; }
 
 .legend-row { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:6px; }
@@ -266,6 +311,13 @@ svg { width:100%; display:block; overflow:visible; }
   </div>
 </div>
 
+<!-- ══ MASTER ROLLING WINDOW ════════════════════════════════════ -->
+<div class="window-panel">
+  <label>📅 Rolling Window</label>
+  <input type="range" id="window-slider" min="30" max="1825" value="365" step="5">
+  <div id="window-val">365 days</div>
+</div>
+
 <!-- ══ WORM CHARTS (4 spreads) ═══════════════════════════════════ -->
 <div class="worm-grid">
 
@@ -274,8 +326,8 @@ svg { width:100%; display:block; overflow:visible; }
     <svg id="worm-svg-0" viewBox="0 0 560 200"></svg>
     <div class="spread-stat-row">
       <div class="spread-stat" style="color:var(--c1)">Now: <span id="wv-0">—</span></div>
-      <div class="spread-stat" style="color:var(--txt2)">μ₃₆₅: <span id="wm-0">—</span></div>
-      <div class="spread-stat" style="color:var(--txt2)">σ₃₆₅: <span id="ws-0">—</span></div>
+      <div class="spread-stat" style="color:var(--txt2)"><span class="win-lbl">μ₃₆₅</span>: <span id="wm-0">—</span></div>
+      <div class="spread-stat" style="color:var(--txt2)"><span class="win-lbl">σ₃₆₅</span>: <span id="ws-0">—</span></div>
       <div class="spread-stat" style="color:var(--gold)">p%: <span id="wp-0">—</span></div>
     </div>
   </div>
@@ -285,8 +337,8 @@ svg { width:100%; display:block; overflow:visible; }
     <svg id="worm-svg-1" viewBox="0 0 560 200"></svg>
     <div class="spread-stat-row">
       <div class="spread-stat" style="color:var(--c2)">Now: <span id="wv-1">—</span></div>
-      <div class="spread-stat" style="color:var(--txt2)">μ₃₆₅: <span id="wm-1">—</span></div>
-      <div class="spread-stat" style="color:var(--txt2)">σ₃₆₅: <span id="ws-1">—</span></div>
+      <div class="spread-stat" style="color:var(--txt2)"><span class="win-lbl">μ₃₆₅</span>: <span id="wm-1">—</span></div>
+      <div class="spread-stat" style="color:var(--txt2)"><span class="win-lbl">σ₃₆₅</span>: <span id="ws-1">—</span></div>
       <div class="spread-stat" style="color:var(--gold)">p%: <span id="wp-1">—</span></div>
     </div>
   </div>
@@ -296,8 +348,8 @@ svg { width:100%; display:block; overflow:visible; }
     <svg id="worm-svg-2" viewBox="0 0 560 200"></svg>
     <div class="spread-stat-row">
       <div class="spread-stat" style="color:var(--c3)">Now: <span id="wv-2">—</span></div>
-      <div class="spread-stat" style="color:var(--txt2)">μ₃₆₅: <span id="wm-2">—</span></div>
-      <div class="spread-stat" style="color:var(--txt2)">σ₃₆₅: <span id="ws-2">—</span></div>
+      <div class="spread-stat" style="color:var(--txt2)"><span class="win-lbl">μ₃₆₅</span>: <span id="wm-2">—</span></div>
+      <div class="spread-stat" style="color:var(--txt2)"><span class="win-lbl">σ₃₆₅</span>: <span id="ws-2">—</span></div>
       <div class="spread-stat" style="color:var(--gold)">p%: <span id="wp-2">—</span></div>
     </div>
   </div>
@@ -307,8 +359,8 @@ svg { width:100%; display:block; overflow:visible; }
     <svg id="worm-svg-3" viewBox="0 0 560 200"></svg>
     <div class="spread-stat-row">
       <div class="spread-stat" style="color:var(--c4)">Now: <span id="wv-3">—</span></div>
-      <div class="spread-stat" style="color:var(--txt2)">μ₃₆₅: <span id="wm-3">—</span></div>
-      <div class="spread-stat" style="color:var(--txt2)">σ₃₆₅: <span id="ws-3">—</span></div>
+      <div class="spread-stat" style="color:var(--txt2)"><span class="win-lbl">μ₃₆₅</span>: <span id="wm-3">—</span></div>
+      <div class="spread-stat" style="color:var(--txt2)"><span class="win-lbl">σ₃₆₅</span>: <span id="ws-3">—</span></div>
       <div class="spread-stat" style="color:var(--gold)">p%: <span id="wp-3">—</span></div>
     </div>
   </div>
@@ -487,9 +539,10 @@ const distX  = WM.left + wormW + 10;  // where dist starts (in SVG coords)
 
 const epKernel = bw => v => Math.abs(v /= bw) <= 1 ? .75 * (1 - v*v) / bw : 0;
 function kde(kernel, ths, vals) { return ths.map(x => [x, d3.mean(vals, v => kernel(x - v))]); }
+let ROLLING_DAYS = 365;
 function getWindow(idx, key) {
   const ref = DATES[idx];
-  const cutoff = new Date(ref); cutoff.setDate(cutoff.getDate() - 365);
+  const cutoff = new Date(ref); cutoff.setDate(cutoff.getDate() - ROLLING_DAYS);
   const out = [];
   for (let i = idx; i >= 0; i--) { if (DATES[i] < cutoff) break; const v = SPREADS[i][key]; if (v != null) out.push(v); }
   return out;
@@ -665,7 +718,7 @@ function update(idx) {
       const wMax  = d3.max(win);
 
       // Range band on worm
-      const cutDate = new Date(DATES[idx]); cutDate.setDate(cutDate.getDate() - 365);
+      const cutDate = new Date(DATES[idx]); cutDate.setDate(cutDate.getDate() - ROLLING_DAYS);
       const startX = Math.max(0, p.xScW(cutDate));
       const endX   = p.xScW(DATES[idx]);
       p.rangeBand
@@ -742,6 +795,31 @@ document.getElementById('btn-play').addEventListener('click', play);
 document.getElementById('btn-pause').addEventListener('click', pause);
 document.getElementById('btn-reset').addEventListener('click', () => { pause(); idx = START_IDX; update(START_IDX); });
 document.getElementById('slider').addEventListener('input', function() { pause(); idx = +this.value; update(idx); });
+
+// ── Master rolling window slider ──
+function updateWindowLabel(days) {
+  const d = +days;
+  let label;
+  if (d < 60)        label = `${d}d`;
+  else if (d < 365)  label = `${Math.round(d/30)}mo`;
+  else if (d === 365) label = '1Y (365d)';
+  else               label = `${(d/365).toFixed(1)}Y (${d}d)`;
+  document.getElementById('window-val').textContent = label;
+  // Update stat row labels
+  const shortLabel = d < 30 ? `${d}d` : d < 365 ? `${Math.round(d/30)}mo` : `${Math.round(d/365*10)/10}Y`;
+  const winLbls = document.querySelectorAll('.win-lbl');
+  winLbls.forEach((el, i) => {
+    el.textContent = (i % 2 === 0 ? 'μ' : 'σ') + shortLabel;
+  });
+}
+
+document.getElementById('window-slider').addEventListener('input', function() {
+  ROLLING_DAYS = +this.value;
+  updateWindowLabel(ROLLING_DAYS);
+  update(idx);
+});
+
+updateWindowLabel(365);
 
 update(START_IDX);
 </script>
